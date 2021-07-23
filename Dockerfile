@@ -12,8 +12,8 @@ RUN apt-get update && rosdep update && \
     source /opt/ros/foxy/setup.bash && \
     source /root/ws_moveit/install/setup.bash && \
     rosdep install -r --from-paths src --ignore-src --rosdistro foxy -y && \
-    colcon build --event-handlers desktop_notification- status- --cmake-args -DCMAKE_BUILD_TYPE=Release \
-    echo "source /opt/ros/foxy/setup.bash" >> ~/.bashrc \
+    colcon build --event-handlers desktop_notification- status- --cmake-args -DCMAKE_BUILD_TYPE=Release && \
+    echo "source /opt/ros/foxy/setup.bash" >> ~/.bashrc && \
     rm -rf /var/lib/apt/lists/*
 
 # Highly recommend enabling bash completion through https://askubuntu.com/a/1026978
