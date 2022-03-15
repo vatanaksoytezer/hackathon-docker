@@ -35,6 +35,9 @@ def main():
                         type=str,
                         help='The command to run (interactively) in the Docker container.',
                         default='/bin/bash')
+    parser.add_argument('--copy-ssh-keys',
+                        action='store_true',
+                        help='Copy the ssh keys from "~/.ssh/" on the host machine to "/root/.ssh/" on the container.')
 
     args = parser.parse_args()
 
@@ -58,35 +61,39 @@ def main():
             sys.exit(-1)
 
         print(f'Creating docker container {args.name} from image {args.image}.')
-        with cm:
-            subprocess.call(['docker',
-                             'run',
-                             '-it',
-                             '--privileged',
-                             '--net=host',] + \
-                            nvidia_args + \
-                            ['--env=DISPLAY',
-                             '--env=QT_X11_NO_MITSHM=1',
-                             '-v', '/tmp/.X11-unix:/tmp/.X11-unix',
-                             '--name',  f'{args.name}',
-                             args.image,
-                             args.cmd])
+        subprocess.call(['docker',
+                         'run',
+                         '-d',
+                         '-it',
+                         '--privileged',
+                         '--net=host',] + \
+                        nvidia_args + \
+                        ['--env=DISPLAY',
+                         '--env=QT_X11_NO_MITSHM=1',
+                         '-v', '/tmp/.X11-unix:/tmp/.X11-unix',
+                         '--name',  f'{args.name}',
+                         args.image,
+                         '/bin/bash'])
     else:
-        # If the container isn't running, then start it.
         print(f'Found a Docker container named {args.name}.')
-        if not containerIsRunning(args.name):
-            print(f'Starting {args.name}.')
-            subprocess.call(['docker',
-                             'start',
-                             args.name])
 
-        # Enter the container.
-        with cm:
-            subprocess.call(['docker',
-                             'exec',
-                             '-it',
-                             args.name,
-                             args.cmd])
+    if args.copy_ssh_keys:
+        copySSHkeys(args.name)
+
+    # If the container isn't running, then start it.
+    if not containerIsRunning(args.name):
+        print(f'Starting {args.name}.')
+        subprocess.call(['docker',
+                         'start',
+                         args.name])
+
+    # Enter the container.
+    with cm:
+        subprocess.call(['docker',
+                         'exec',
+                         '-it',
+                         args.name,
+                         args.cmd])
 
 
 def containerExists(name):
@@ -119,6 +126,36 @@ def containerIsRunning(name):
         running_containers.append(line.split()[-1])
 
     return name in running_containers
+
+
+def copySSHkeys(name):
+    """
+    Copies the SSH keys from ~/.ssh/ on the host machine to
+    /root/.ssh/ on the container.
+    """
+    # Create the /root/.ssh directory.
+    subprocess.call(['docker',
+                     'exec',
+                     name,
+                     'mkdir', '-p', '/root/.ssh'])
+
+    # Copy ssh keys one at a time.  (Copying the ~/.ssh directory
+    # recursively doesn't work and I don't know why.)
+    ssh_dir = os.path.expanduser(os.path.join('~', '.ssh'))
+    for key in os.listdir(ssh_dir):
+        print(f'Found key: {key}')
+        nm = os.path.basename(key)
+        key_abspath = os.path.join(ssh_dir, nm)
+        dest = os.path.join('/', 'root', '.ssh', nm)
+        subprocess.call(['docker',
+                         'cp',
+                         key_abspath,
+                         f'{name}:{dest}'])
+        # Change the owner of each file to root.
+        subprocess.call(['docker',
+                         'exec',
+                         name,
+                         'chown', 'root:root', dest])
 
 
 if __name__ == '__main__':
