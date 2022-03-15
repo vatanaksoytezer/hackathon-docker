@@ -138,6 +138,8 @@ def copySSHkeys(name):
     Copies the SSH keys from ~/.ssh/ on the host machine to
     /root/.ssh/ on the container.
     """
+    print(f'Copying SSH keys to {name}...')
+
     # Create the /root/.ssh directory.
     subprocess.call(['docker',
                      'exec',
@@ -148,7 +150,6 @@ def copySSHkeys(name):
     # recursively doesn't work and I don't know why.)
     ssh_dir = os.path.expanduser(os.path.join('~', '.ssh'))
     for key in os.listdir(ssh_dir):
-        print(f'Found key: {key}')
         nm = os.path.basename(key)
         key_abspath = os.path.join(ssh_dir, nm)
         dest = os.path.join('/', 'root', '.ssh', nm)
@@ -168,6 +169,8 @@ def copyGitConfig(name):
     Copies the global git config from ~/.gitconfig on the host machine
     to /root/.gitconfig on the container.
     """
+    print(f'Copying git config to {name}...')
+
     host_path = os.path.expanduser(os.path.join('~', '.gitconfig'))
     container_path = os.path.join('/', 'root', '.gitconfig')
     subprocess.call(['docker',
