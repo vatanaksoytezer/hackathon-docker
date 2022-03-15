@@ -1,5 +1,8 @@
 from argparse import ArgumentParser
-import os, sys, subprocess
+import os
+import sys
+import subprocess
+
 
 class ContextManager():
     def __init__(self):
@@ -12,6 +15,7 @@ class ContextManager():
     def __exit__(self, exc_type, exc_value, exc_traceback):
         if self.__use_graphics:
             os.popen('xhost -local:root')
+
 
 def main():
     parser = ArgumentParser(description='Create/launch docker containers')
@@ -115,6 +119,7 @@ def containerIsRunning(name):
         running_containers.append(line.split()[-1])
 
     return name in running_containers
+
 
 if __name__ == '__main__':
     main()
