@@ -27,6 +27,10 @@ def main():
     parser.add_argument('--nvidia',
                         action='store_true',
                         help='Adds arguments to "docker run" to support NVIDIA GPUs.')
+    parser.add_argument('--cmd',
+                        type=str,
+                        help='The command to run (interactively) in the Docker container.',
+                        default='/bin/bash')
 
     args = parser.parse_args()
 
@@ -62,7 +66,7 @@ def main():
                              '-v', '/tmp/.X11-unix:/tmp/.X11-unix',
                              '--name',  f'{args.name}',
                              args.image,
-                             '/bin/bash'])
+                             args.cmd])
     else:
         # If the container isn't running, then start it.
         print(f'Found a Docker container named {args.name}.')
@@ -78,7 +82,7 @@ def main():
                              'exec',
                              '-it',
                              args.name,
-                             '/bin/bash'])
+                             args.cmd])
 
 
 def containerExists(name):
