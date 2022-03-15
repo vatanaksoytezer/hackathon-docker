@@ -38,6 +38,9 @@ def main():
     parser.add_argument('--copy-ssh-keys',
                         action='store_true',
                         help='Copy the ssh keys from "~/.ssh/" on the host machine to "/root/.ssh/" on the container.')
+    parser.add_argument('--copy-git-config',
+                        action='store_true',
+                        help='Copy the global git config from "~/.gitconfig" on the host machine to "/root/.gitconfig" on the container.')
 
     args = parser.parse_args()
 
@@ -79,6 +82,8 @@ def main():
 
     if args.copy_ssh_keys:
         copySSHkeys(args.name)
+    if args.copy_git_config:
+        copyGitConfig(args.name)
 
     # If the container isn't running, then start it.
     if not containerIsRunning(args.name):
@@ -156,6 +161,19 @@ def copySSHkeys(name):
                          'exec',
                          name,
                          'chown', 'root:root', dest])
+
+
+def copyGitConfig(name):
+    """
+    Copies the global git config from ~/.gitconfig on the host machine
+    to /root/.gitconfig on the container.
+    """
+    host_path = os.path.expanduser(os.path.join('~', '.gitconfig'))
+    container_path = os.path.join('/', 'root', '.gitconfig')
+    subprocess.call(['docker',
+                     'cp',
+                     host_path,
+                     f'{name}:{container_path}'])
 
 
 if __name__ == '__main__':
