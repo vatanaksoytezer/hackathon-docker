@@ -25,7 +25,6 @@ def main():
     parser.add_argument('name',
                         type=str,
                         help='The name of the container to be created/started.')
-
     parser.add_argument('--image',
                         type=str,
                         help='The name of the image to use when creating the container.',
@@ -84,9 +83,8 @@ def main():
                          '--net=host',] + \
                         nvidia_args + \
                         ['--env=DISPLAY',
-                         '--env=QT_X11_NO_MITSHM=1',] +\
-                         # '-v', '/tmp/.X11-unix:/tmp/.X11-unix',
-                        bind_mounts +\
+                         '--env=QT_X11_NO_MITSHM=1',] + \
+                        bind_mounts + \
                         ['--name',  f'{args.name}',
                          args.image,
                          '/bin/bash'])
