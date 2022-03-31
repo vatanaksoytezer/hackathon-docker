@@ -25,7 +25,6 @@ def main():
     parser.add_argument('name',
                         type=str,
                         help='The name of the container to be created/started.')
-
     parser.add_argument('--image',
                         type=str,
                         help='The name of the image to use when creating the container.',
@@ -43,6 +42,10 @@ def main():
     parser.add_argument('--copy-git-config',
                         action='store_true',
                         help='Copy the global git config from "~/.gitconfig" on the host machine to "/root/.gitconfig" on the container.')
+    parser.add_argument('-v', '--volume',
+                        type=str,
+                        nargs='*',
+                        help='Bind mount a volume')
 
     args = parser.parse_args()
 
@@ -57,6 +60,12 @@ def main():
             '--env=NVIDIA_VISIBLE_DEVICES=all',
             '--env=NVIDIA_DRIVER_CAPABILITIES=all',
         ]
+
+    # Make a list of all bind mounts.
+    bind_mounts = [ '-v', '/tmp/.X11-unix:/tmp/.X11-unix' ]
+    if args.volume:
+        for v in args.volume:
+            bind_mounts += [ '-v', v ]
 
     # If no container with the given name exists, then create it.
     if not containerExists(args.name):
@@ -74,9 +83,9 @@ def main():
                          '--net=host',] + \
                         nvidia_args + \
                         ['--env=DISPLAY',
-                         '--env=QT_X11_NO_MITSHM=1',
-                         '-v', '/tmp/.X11-unix:/tmp/.X11-unix',
-                         '--name',  f'{args.name}',
+                         '--env=QT_X11_NO_MITSHM=1',] + \
+                        bind_mounts + \
+                        ['--name',  f'{args.name}',
                          args.image,
                          '/bin/bash'])
     else:
