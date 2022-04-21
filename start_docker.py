@@ -43,8 +43,8 @@ def main():
                         action='store_true',
                         help='Copy the global git config from "~/.gitconfig" on the host machine to "/root/.gitconfig" on the container.')
     parser.add_argument('-v', '--volume',
+                        action='append',
                         type=str,
-                        nargs='*',
                         help='Bind mount a volume')
 
     args = parser.parse_args()
