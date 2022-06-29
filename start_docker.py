@@ -43,9 +43,13 @@ def main():
                         action='store_true',
                         help='Copy the global git config from "~/.gitconfig" on the host machine to "/root/.gitconfig" on the container.')
     parser.add_argument('-v', '--volume',
+                        action='append',
                         type=str,
-                        nargs='*',
                         help='Bind mount a volume')
+    parser.add_argument('-e', '--env',
+                        type=str,
+                        action='append',
+                        help='Set environment variables in the container')
 
     args = parser.parse_args()
 
@@ -67,6 +71,12 @@ def main():
         for v in args.volume:
             bind_mounts += [ '-v', v ]
 
+    # Make a list of all environment variables.
+    env_vars = list()
+    if args.env:
+        for e in args.env:
+            env_vars += [ '-e', e ]
+
     # If no container with the given name exists, then create it.
     if not containerExists(args.name):
         print('Can\'t find Docker container with the given name.')
@@ -85,6 +95,7 @@ def main():
                         ['--env=DISPLAY',
                          '--env=QT_X11_NO_MITSHM=1',] + \
                         bind_mounts + \
+                        env_vars + \
                         ['--name',  f'{args.name}',
                          args.image,
                          '/bin/bash'])
